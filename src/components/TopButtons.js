@@ -9,8 +9,6 @@ function TopButtons() {
     { id: 5, title: "Paris" }
   ];
 
-  let someVar = "New Button";
-
   // console.log()
 
   return (

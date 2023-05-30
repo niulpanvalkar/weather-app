@@ -1,22 +1,133 @@
-import dotenv from "dotenv";
+import { DateTime } from "luxon";
+import { API_KEY, API_KEY } from "../../config";
 
-dotenv.config();
-
-const API_KEY = process.env.API_KEY;
+const apiKey = API_KEY;
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 
 const getWeatherData = (infoType, searchParams) => {
     const url = new URL(BASE_URL + '/' + infoType);
-    url.search = new URLSearchParams({...searchParams, appid:API_KEY})
+    url.search = new URLSearchParams({...searchParams, appid:apiKey})
     console.log("url :", url);
     return fetch(url).then((res) => res.json()).then(data => data);
 }   
 
+const formatCurrentWeather = (data) => {
+  console.log(" formatCurrentWeather data : ", data);
+  const {
+    coord: {lat, lon},
+    main: {temp, feels_like, temp_min, temp_max, pressure, humidity},
+    name,
+    dt,
+    timezone,
+    weather,
+    wind: {speed},
+    sys: {country, sunrise, sunset}
+  } = data;
 
-export default getWeatherData;
+  const {main: details, icon} = weather[0];
+
+  return {
+    lat,
+    lon,
+    temp,
+    feels_like,
+    temp_min,
+    temp_max,
+    pressure,
+    humidity,
+    name,
+    dt,
+    timezone,
+    country,
+    sunrise,
+    sunset,
+    details,
+    icon,
+    speed,
+  };
+}
+
+
+const formatForecastWeather = (data) => {
+
+  console.log("data : ", data);
+
+  let {city: {name, timezone, sunrise, sunset},list} = data;
+
+  let hourly = list.slice(0,5).map(d => {
+    return {
+      // time: DateTime.fromSeconds(d.dt).toFormat("hh:mm a"),
+      time: formatToLocalTime(d.dt, timezone, "hh:mm a"),
+      timezone: timezone,
+      temp: d.main.temp,
+      temp_min: d.main.temp_min,
+      temp_max:d.main.temp_max,
+      icon: d.weather[0].icon
+    }
+  })
+
+  return {name, timezone, sunrise, sunset, hourly};
+
+  // daily = daily.slice(1,6).map(d => {
+  //   return {
+  //     title: formatToLocalTime(d.dt, timezone, 'ccc'),
+  //     temp: d.temp.day,
+  //     icon: d.weather[0].icon
+  //   }
+  // })
+  // return {timezone, daily, hourly};
+}
+
+const formatZone = (zone) => {
+  zone = zone.toString();
+
+  let sign = zone[0] === "-" ? "-" : "+";
+
+  let d = sign === "-" ? zone.slice(1) : zone;
+
+  let hours = d/3600;
+
+  return `UTC${sign}${hours}`;
+
+}
+
+const formatToLocalTime = (secs, zone, format="cccc dd, LLL, yyyy' | Local time: 'hh:mm a'") => {
+  
+  zone = formatZone(zone);
+
+  return DateTime.fromSeconds(secs).setZone(zone).toFormat(format);
+}
+
+const getFormattedWeatherData = async (searchParams) => {
+  const formattedCurrentWeather = await getWeatherData(
+    "weather",
+    searchParams
+  ).then(formatCurrentWeather);
+
+  const {lat, lon} = formattedCurrentWeather;
+
+  console.log("formattedCurrentWeather : ", formattedCurrentWeather)
+
+  const formattedForecastWeather = await getWeatherData("forecast", {
+    lat,
+    lon,
+    exclude: "current, minutely, alerts",
+    units: searchParams.units,
+  }).then(formatForecastWeather);
+
+  return {formattedCurrentWeather, formattedForecastWeather};
+}
+
+const iconUrlFromCode = (code) => {
+  return `http://openweathermap.org/img/wn/${code}@2x.png`;
+}
+
+export default getFormattedWeatherData;
+
+export {iconUrlFromCode, formatToLocalTime};
 
 // Mumbai 
-
+// weather api
 /**{
     "coord": {
       "lon": 72.8479,
@@ -62,7 +173,7 @@ export default getWeatherData;
   }
 
   Boston
-
+// weather api 
   {
   "coord": {
     "lon": -71.0598,

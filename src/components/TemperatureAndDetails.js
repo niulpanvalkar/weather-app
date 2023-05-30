@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatToLocalTime, iconUrlFromCode } from '../services/weather';
 
 import {
     UilArrowUp,
@@ -10,34 +11,38 @@ import {
     UilSunset
 } from "@iconscout/react-unicons";
 
-function TemperatureAndDetails() {
-  return (
+function TemperatureAndDetails({weather: {formattedCurrentWeather: {temp, details, icon, sunrise, sunset, temp_min, temp_max, humidity, feels_like, speed, timezone, dt}}}) {
+
+    const sunRise = formatToLocalTime(sunrise, timezone, "hh:mm a");
+    const sunSet = formatToLocalTime(sunset, timezone, "hh:mm a");
+
+    return (
     <div>
         <div className='flex items-center justify-center py-6 text-xl text-cyan-300'>
-            <p>Cloudy</p>
+            <p>{`${details}`}</p>
         </div>
         <div className='flex flex-row items-center justify-between text-white py-3'>
             <img 
-                src='http://openweathermap.org/img/wn/01d@2x.png' 
+                src={iconUrlFromCode(icon)} 
                 alt='' 
                 className='w-20'
             />
-            <p className='text-5xl'>34</p>
+            <p className='text-5xl'>{`${temp.toFixed()}°`}</p>
             <div className='flex flex-col space-y-2'>
                 <div className='flex font-light text-sm items-center justify-center'>
                     <UilTemperature size={18} className="mr-1"/>
                     Real feel: 
-                    <span className='font-medium ml-1'>32°</span>
+                    <span className='font-medium ml-1'>{`${feels_like.toFixed()}°`}</span>
                 </div>
                 <div className='flex font-light text-sm items-center justify-center'>
                     <UilTear size={18} className="mr-1"/>
                     Humidity: 
-                    <span className='font-medium ml-1'>65%</span>
+                    <span className='font-medium ml-1'>{`${humidity}%`}</span>
                 </div>
                 <div className='flex font-light text-sm items-center justify-center'>
                     <UilWind size={18} className="mr-1"/>
                     Wind: 
-                    <span className='font-medium ml-1'>11 kmph</span>
+                    <span className='font-medium ml-1'>{`${speed}`}</span>
                 </div>
             </div>
         </div>
@@ -45,28 +50,28 @@ function TemperatureAndDetails() {
         <div className='flex flex-row items-center justify-center space-x-2 text-white text-sm py-3'>
             <UilSun />
             <p className='font-light'>
-                Rise: <span className='font-medium ml-1'>06:45 AM</span>
+                Rise: <span className='font-medium ml-1'>{`${sunRise}`}</span>
             </p>
         </div>
         <div className='flex flex-row items-center justify-center space-x-2 text-white text-sm py-3'>
             <UilSun />
             <p className='font-light'>
-                Rise: <span className='font-medium ml-1'>06:45 AM</span>
+                Rise: <span className='font-medium ml-1'>{`${sunRise}`}</span>
             </p>
             <p className='font-light'>|</p>
             <UilSunset />
             <p className='font-light'>
-                Set: <span className='font-medium ml-1'>07:35 PM</span>
+                Set: <span className='font-medium ml-1'>{`${sunSet}`}</span>
             </p>
             <p className='font-light'>|</p>
             <UilSun />
             <p className='font-light'>
-                High: <span className='font-medium ml-1'>45°</span>
+                High: <span className='font-medium ml-1'>{`${temp_max.toFixed()}°`}</span>
             </p>
             <p className='font-light'>|</p>
             <UilSun />
             <p className='font-light'>
-                Low: <span className='font-medium ml-1'>40°</span>
+                Low: <span className='font-medium ml-1'>{`${temp_min.toFixed()}°`}</span>
             </p>
         </div>
         
